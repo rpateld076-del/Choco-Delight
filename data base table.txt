@@ -1,0 +1,272 @@
+-- Create database
+CREATE DATABASE choco_delight CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE choco_delight;
+
+-- Admin user (simple)
+CREATE TABLE admins (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  name VARCHAR(150),
+  email VARCHAR(150),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Categories & Subcategories
+CREATE TABLE categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE subcategories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  category_id INT NOT NULL,
+  name VARCHAR(150) NOT NULL,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+);
+
+-- Products
+CREATE TABLE products (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  category_id INT NOT NULL,
+  subcategory_id INT,
+  name VARCHAR(200) NOT NULL,
+  description TEXT,
+  price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  stock INT NOT NULL DEFAULT 0,
+  image VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+);
+
+-- Gallery
+CREATE TABLE gallery (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  product_id INT NULL,
+  filename VARCHAR(255) NOT NULL,
+  caption VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+);
+
+-- Orders & Payments
+CREATE TABLE customers (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150),
+  email VARCHAR(150),
+  phone VARCHAR(50),
+  address TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orders (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  customer_id INT,
+  total DECIMAL(10,2),
+  status ENUM('pending','processing','shipped','delivered','cancelled') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+);
+
+CREATE TABLE order_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  product_id INT,
+  qty INT DEFAULT 1,
+  price DECIMAL(10,2),
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+);
+
+CREATE TABLE payments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT,
+  amount DECIMAL(10,2),
+  method VARCHAR(50),
+  status ENUM('pending','paid','failed') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
+);
+
+-- Feedback
+CREATE TABLE feedback (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  customer_name VARCHAR(150),
+  email VARCHAR(150),
+  message TEXT,
+  rating TINYINT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Delivery persons
+CREATE TABLE delivery_persons (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150),
+  phone VARCHAR(50),
+  vehicle VARCHAR(100),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert sample admin (password is 'password' hashed)
+INSERT INTO admins (username, password, name, email)
+VALUES ('admin', '{PASSWORD_PLACEHOLDER}', 'Choco Admin', 'admin@choco.local');
+
+
+
+
+-- If you don't have a users table, create it:
+CREATE TABLE IF NOT EXISTS users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    user_type ENUM('admin', 'delivery', 'customer') DEFAULT 'delivery',
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+
+-- Ensure your orders table has these columns:
+ALTER TABLE orders 
+ADD COLUMN IF NOT EXISTS delivery_person_id INT,
+ADD COLUMN IF NOT EXISTS delivery_date DATETIME,
+ADD COLUMN IF NOT EXISTS order_status ENUM('pending', 'confirmed', 'processing', 'out_for_delivery', 'delivered', 'cancelled') DEFAULT 'pending',
+ADD COLUMN IF NOT EXISTS payment_status ENUM('pending', 'paid', 'cod', 'failed') DEFAULT 'pending';
+
+-- Add foreign key (optional but recommended)
+ALTER TABLE orders 
+ADD FOREIGN KEY (delivery_person_id) REFERENCES users(id);
+
+
+
+a kadach na thay to na che 
+
+-- Database Setup for ChocoDelight Delivery System
+-- Run this SQL script first to create the database structure
+
+CREATE DATABASE IF NOT EXISTS chocodelight_delivery;
+USE chocodelight_delivery;
+
+-- Delivery Personnel Table
+CREATE TABLE IF NOT EXISTS delivery_personnel (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+    email VARCHAR(100),
+    status ENUM('active', 'inactive') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Orders Table
+CREATE TABLE IF NOT EXISTS orders (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    order_number VARCHAR(50) UNIQUE NOT NULL,
+    customer_id INT NOT NULL,
+    delivery_person_id INT,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    payment_status ENUM('pending', 'paid', 'cod') DEFAULT 'pending',
+    delivery_status ENUM('pending', 'collected', 'in_transit', 'delivered', 'cancelled') DEFAULT 'pending',
+    order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    delivery_date TIMESTAMP NULL,
+    notes TEXT,
+    FOREIGN KEY (delivery_person_id) REFERENCES delivery_personnel(id)
+);
+
+-- Customers Table
+CREATE TABLE IF NOT EXISTS customers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    full_name VARCHAR(100) NOT NULL,
+    phone VARCHAR(15) NOT NULL,
+    email VARCHAR(100),
+    address TEXT NOT NULL,
+    city VARCHAR(50),
+    postal_code VARCHAR(10),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Order Items Table
+CREATE TABLE IF NOT EXISTS order_items (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT NOT NULL,
+    product_name VARCHAR(100) NOT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+);
+
+-- Delivery Logs Table
+CREATE TABLE IF NOT EXISTS delivery_logs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    order_id INT NOT NULL,
+    delivery_person_id INT NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    notes TEXT,
+    action_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES orders(id),
+    FOREIGN KEY (delivery_person_id) REFERENCES delivery_personnel(id)
+);
+
+-- Admin Table
+CREATE TABLE IF NOT EXISTS admins (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    role ENUM('super_admin', 'admin') DEFAULT 'admin',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Insert Sample Data
+-- Default admin (username: admin, password: admin123)
+INSERT INTO admins (username, password, full_name, email, role) VALUES
+('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin User', 'admin@chocodelight.com', 'super_admin');
+
+-- Sample delivery person (username: delivery1, password: delivery123)
+INSERT INTO delivery_personnel (username, password, full_name, phone, email) VALUES
+('delivery1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John Delivery', '+1234567890', 'john@chocodelight.com');
+
+-- Sample customers
+INSERT INTO customers (full_name, phone, email, address, city, postal_code) VALUES
+('Alice Johnson', '+1234567891', 'alice@email.com', '123 Sweet Street, Apartment 4B', 'New York', '10001'),
+('Bob Smith', '+1234567892', 'bob@email.com', '456 Chocolate Avenue', 'Los Angeles', '90001'),
+('Carol White', '+1234567893', 'carol@email.com', '789 Candy Lane, Suite 12', 'Chicago', '60601');
+
+-- Sample orders
+INSERT INTO orders (order_number, customer_id, delivery_person_id, total_amount, payment_status, delivery_status, notes) VALUES
+('ORD-2025-001', 1, 1, 45.99, 'cod', 'pending', 'Please ring doorbell twice'),
+('ORD-2025-002', 2, 1, 78.50, 'paid', 'pending', 'Leave at front desk if not home'),
+('ORD-2025-003', 3, 1, 32.25, 'cod', 'collected', 'Customer prefers afternoon delivery');
+
+-- Sample order items
+INSERT INTO order_items (order_id, product_name, quantity, unit_price, subtotal) VALUES
+(1, 'Dark Chocolate Truffles Box', 2, 15.99, 31.98),
+(1, 'Milk Chocolate Bar', 1, 5.99, 5.99),
+(1, 'White Chocolate Cookies', 1, 8.02, 8.02),
+(2, 'Assorted Chocolate Gift Box', 1, 49.99, 49.99),
+(2, 'Chocolate Covered Strawberries', 2, 14.25, 28.50),
+(3, 'Hazelnut Pralines', 1, 22.50, 22.50),
+(3, 'Caramel Chocolates', 1, 9.75, 9.75);
+
+
+-- Get delivery stats
+SELECT 
+    u.name,
+    COUNT(o.id) as total_orders,
+    SUM(CASE WHEN o.order_status = 'delivered' THEN 1 ELSE 0 END) as delivered,
+    SUM(CASE WHEN o.order_status = 'delivered' THEN o.total_amount ELSE 0 END) as total_collected
+FROM users u
+LEFT JOIN orders o ON u.id = o.delivery_person_id
+WHERE u.user_type = 'delivery'
+GROUP BY u.id
+ORDER BY delivered DESC;

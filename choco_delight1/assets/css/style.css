@@ -1,0 +1,19 @@
+
+/* Responsive, improved styles */
+*{box-sizing:border-box}
+body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:0;background:#fff;color:#222}
+header{background:#3b2f2f;color:#fff;padding:12px}
+header h1{margin:0;font-size:20px}
+nav a{color:#fff;margin-right:8px;text-decoration:none}
+.container{max-width:1000px;margin:12px auto;padding:12px}
+.products{display:flex;flex-wrap:wrap;gap:12px}
+.card{border:1px solid #ddd;padding:12px;border-radius:6px;width:100%;background:#fff}
+@media(min-width:600px){ .card{width:calc(50% - 12px)} }
+@media(min-width:900px){ .card{width:220px} }
+.thumb{width:120px;height:80px;object-fit:cover;margin:6px}
+.gallery{display:flex;flex-wrap:wrap;gap:8px}
+.error{color:red}
+table{width:100%;border-collapse:collapse;margin:8px 0}
+table th, table td{border:1px solid #ccc;padding:8px;text-align:left}
+button{background:#3b2f2f;color:#fff;border:none;padding:8px 12px;border-radius:6px;cursor:pointer}
+input,select{padding:6px;margin:4px 0}
